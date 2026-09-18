@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A small, dependency-free encoder and decoder toolbox that runs entirely in your browser." />
+    <meta name="author" content="STÜBER SYSTEMS GmbH" />
+    <meta name="application-name" content="Encoder / Decoder Toolbox" />
+    <link rel="canonical" href="https://openpotato.github.io/endeco/" />
+    <link rel="license" href="https://github.com/openpotato/endeco/blob/main/LICENSE" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OpenPotato" />
+    <meta property="og:title" content="Encoder / Decoder Toolbox" />
+    <meta property="og:description" content="A simple encoder and decoder toolbox that runs directly in your browser." />
+    <meta property="og:url" content="https://openpotato.github.io/endeco/" />
+    <meta property="og:locale" content="en_US" />
+    <title>Encoder / Decoder Toolbox</title>
+
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f6f7f9;
+            --surface: #fff;
+            --text: #18181b;
+            --muted: #71717a;
+            --border: #e4e4e7;
+            --primary: #18181b;
+            --primaryText: #fff;
+            --focus: #3b82f6;
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root {
+                --bg: #111113;
+                --surface: #18181b;
+                --text: #f4f4f5;
+                --muted: #a1a1aa;
+                --border: #3f3f46;
+                --primary: #f4f4f5;
+                --primaryText: #18181b;
+                --focus: #60a5fa
+            }
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+        }
+
+        .container {
+            width: min(1040px, calc(100% - 32px));
+            margin: 64px auto
+        }
+
+        h1 {
+            margin: 0 0 7px;
+            font-size: 30px;
+            font-weight: 680;
+            letter-spacing: -.035em
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            font-size: 18px;
+            font-weight: 680;
+            letter-spacing: -.02em
+        }
+
+        .subtitle {
+            margin: 0 0 30px;
+            color: var(--muted);
+            font-size: 14px
+        }
+
+        .card {
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px
+        }
+
+        .card+.card {
+            margin-top: 20px
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: minmax(240px, 420px);
+            gap: 18px;
+            margin-bottom: 24px
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px
+        }
+
+        .field.grow {
+            min-width: 0
+        }
+
+        label,
+        .editor-title {
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        select,
+        button,
+        textarea {
+            font: inherit
+        }
+
+        select {
+            width: 100%;
+            height: 40px;
+            padding: 0 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px
+        }
+
+        select:focus,
+        textarea:focus,
+        button:focus-visible {
+            outline: 2px solid var(--focus);
+            outline-offset: 2px
+        }
+
+        .editors {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px
+        }
+
+        .editor {
+            min-width: 0
+        }
+
+        .editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 320px;
+            resize: vertical;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            tab-size: 4
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px
+        }
+
+        button {
+            height: 40px;
+            padding: 0 17px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 650;
+            cursor: pointer
+        }
+
+        button:hover {
+            filter: brightness(.97)
+        }
+
+        button.primary {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--primaryText)
+        }
+
+        .editor-header button {
+            height: 34px;
+            padding: 0 11px;
+            font-size: 13px
+        }
+
+        button[hidden] {
+            display: none
+        }
+
+        .status {
+            min-height: 18px;
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .status.error {
+            color: var(--text);
+            font-weight: 600
+        }
+
+        .hint {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55
+        }
+
+        .warning {
+            margin-top: 14px;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.5
+        }
+
+        .warning[hidden] {
+            display: none
+        }
+
+        .references {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65
+        }
+
+        .references li+li {
+            margin-top: 8px
+        }
+
+        a {
+            color: var(--text);
+            text-decoration: underline;
+            text-decoration-color: var(--border);
+            text-underline-offset: 3px
+        }
+
+        a:hover {
+            text-decoration-color: var(--text)
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: .92em
+        }
+
+        .site-footer {
+            margin-top: 20px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center
+        }
+
+        .site-footer p {
+            margin: 0
+        }
+
+        .site-footer p+p {
+            margin-top: 1rem
+        }
+
+        @media(max-width:720px) {
+            .container {
+                margin: 32px auto
+            }
+
+            .card {
+                padding: 18px
+            }
+
+            .editors {
+                grid-template-columns: 1fr
+            }
+
+            textarea {
+                min-height: 220px
+            }
+
+            .actions {
+                flex-direction: column
+            }
+
+            .actions button {
+                width: 100%
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Encoder / Decoder</h1>
+        <p class="subtitle">Encode, decode and inspect common web formats locally in your browser.</p>
+
+        <main class="card">
+            <div class="toolbar">
+                <div class="field grow">
+                    <label for="format">Format</label>
+                    <select id="format">
+                        <optgroup label="URLs">
+                            <option value="url-component">URL component</option>
+                            <option value="url">Whole URL / URI</option>
+                            <option value="query-string">Query string ↔ JSON</option>
+                        </optgroup>
+                        <optgroup label="Base encodings">
+                            <option value="base64">Base64</option>
+                            <option value="base64url">Base64URL</option>
+                            <option value="base32">Base32</option>
+                            <option value="hex">Base16 / UTF-8 hex</option>
+                        </optgroup>
+                        <optgroup label="Text escaping">
+                            <option value="html">HTML character escaping</option>
+                            <option value="json-string">JSON string</option>
+                            <option value="unicode">JavaScript Unicode escapes</option>
+                        </optgroup>
+                        <optgroup label="Inspection / conversion">
+                            <option value="jwt">JWT (decode only)</option>
+                            <option value="unix-seconds">Unix timestamp (seconds)</option>
+                            <option value="unix-milliseconds">Unix timestamp (milliseconds)</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <div class="editors">
+                <div class="editor">
+                    <div class="editor-header">
+                        <span id="inputTitle" class="editor-title">Input</span>
+                        <button id="clearInput" type="button">Clear</button>
+                    </div>
+                    <textarea id="input" spellcheck="false" placeholder="Enter text..."></textarea>
+                </div>
+
+                <div class="editor">
+                    <div class="editor-header">
+                        <span id="outputTitle" class="editor-title">Output</span>
+                        <button id="copyOutput" type="button">Copy</button>
+                    </div>
+                    <textarea id="output" spellcheck="false" placeholder="Result..." readonly></textarea>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="encode" class="primary" type="button">Encode</button>
+                <button id="decode" type="button">Decode</button>
+                <button id="swap" type="button">Swap</button>
+                <button id="clearAll" type="button">Clear all</button>
+            </div>
+
+            <div id="status" class="status" role="status" aria-live="polite"></div>
+            <div id="warning" class="warning" hidden></div>
+            <div id="hint" class="hint"></div>
+        </main>
+
+        <section class="card" aria-labelledby="referencesTitle">
+            <h2 id="referencesTitle">Standards &amp; references</h2>
+            <ul class="references">
+                <li><strong>URI percent-encoding:</strong> RFC 3986, especially §2.1–2.4 — <a
+                        href="https://www.rfc-editor.org/rfc/rfc3986.html" target="_blank" rel="noopener noreferrer">RFC
+                        3986</a>.</li>
+                <li><strong>Web URL parsing / form query strings:</strong> WHATWG URL Standard, including
+                    <code>application/x-www-form-urlencoded</code> and <code>URLSearchParams</code> — <a
+                        href="https://url.spec.whatwg.org/" target="_blank" rel="noopener noreferrer">WHATWG URL
+                        Standard</a>.
+                </li>
+                <li><strong>JavaScript <code>encodeURI()</code> / <code>encodeURIComponent()</code>:</strong> ECMA-262 —
+                    <a href="https://tc39.es/ecma262/" target="_blank" rel="noopener noreferrer">ECMAScript Language
+                        Specification</a>.
+                </li>
+                <li><strong>Base64, Base64URL, Base32 and Base16:</strong> RFC 4648, §§4–8 — <a
+                        href="https://www.rfc-editor.org/rfc/rfc4648.html" target="_blank" rel="noopener noreferrer">RFC
+                        4648</a>.</li>
+                <li><strong>UTF-8:</strong> RFC 3629 / STD 63 — <a href="https://www.rfc-editor.org/rfc/rfc3629.html"
+                        target="_blank" rel="noopener noreferrer">RFC 3629</a>.</li>
+                <li><strong>HTML character references:</strong> WHATWG HTML Standard — <a
+                        href="https://html.spec.whatwg.org/multipage/parsing.html#character-references" target="_blank"
+                        rel="noopener noreferrer">HTML character references</a>.</li>
+                <li><strong>JSON strings and escaping:</strong> RFC 8259, especially §7; JSON is UTF-8 for interoperable
+                    exchange — <a href="https://www.rfc-editor.org/rfc/rfc8259.html" target="_blank"
+                        rel="noopener noreferrer">RFC 8259</a>.</li>
+                <li><strong>JavaScript Unicode escape sequences:</strong> ECMA-262 lexical grammar (<code>\uXXXX</code>
+                    and <code>\u{...}</code>) — <a
+                        href="https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html"
+                        target="_blank" rel="noopener noreferrer">ECMA-262 lexical grammar</a>.</li>
+                <li><strong>JWT:</strong> RFC 7519; compact signed JWTs use Base64URL through JWS. Security guidance is
+                    in RFC 8725 / BCP 225 — <a href="https://www.rfc-editor.org/rfc/rfc7519.html" target="_blank"
+                        rel="noopener noreferrer">RFC 7519</a> and <a href="https://www.rfc-editor.org/rfc/rfc8725.html"
+                        target="_blank" rel="noopener noreferrer">RFC 8725</a>.</li>
+                <li><strong>JWS / JWE:</strong> RFC 7515 and RFC 7516 define the compact signing and encryption
+                    structures used by JWT — <a href="https://www.rfc-editor.org/rfc/rfc7515.html" target="_blank"
+                        rel="noopener noreferrer">RFC 7515</a>, <a href="https://www.rfc-editor.org/rfc/rfc7516.html"
+                        target="_blank" rel="noopener noreferrer">RFC 7516</a>.</li>
+                <li><strong>Internet timestamps:</strong> RFC 3339 defines a profile of ISO 8601 used for Internet
+                    date/time strings — <a href="https://www.rfc-editor.org/rfc/rfc3339.html" target="_blank"
+                        rel="noopener noreferrer">RFC 3339</a>.</li>
+                <li><strong>Unix / POSIX epoch:</strong> POSIX defines the Epoch as 1970-01-01 00:00:00 UTC and “seconds
+                    since the Epoch”; ECMAScript Date uses millisecond time values with the same epoch — <a
+                        href="https://pubs.opengroup.org/onlinepubs/9799919799/" target="_blank"
+                        rel="noopener noreferrer">POSIX.1-2024</a> and <a
+                        href="https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-time-values-and-time-range"
+                        target="_blank" rel="noopener noreferrer">ECMA-262 Date</a>.</li>
+            </ul>
+        </section>
+
+        <footer class="site-footer">
+            <p><strong>Runs locally in your browser. No data is transmitted.</strong></p>
+            <p>Made with ❤️ in Berlin. Source code on <a href="https://github.com/openpotato/endeco">GitHub</a>.</p>
+        </footer>
+    </div>
+
+    <script>
+        "use strict";
+
+        // Main UI elements.
+        const format = document.getElementById("format");
+        const input = document.getElementById("input");
+        const output = document.getElementById("output");
+        const inputTitle = document.getElementById("inputTitle");
+        const outputTitle = document.getElementById("outputTitle");
+        const status = document.getElementById("status");
+        const warning = document.getElementById("warning");
+        const hint = document.getElementById("hint");
+
+        // Action buttons.
+        const encodeButton = document.getElementById("encode");
+        const decodeButton = document.getElementById("decode");
+        const swapButton = document.getElementById("swap");
+        const copyOutputButton = document.getElementById("copyOutput");
+        const clearInputButton = document.getElementById("clearInput");
+        const clearAllButton = document.getElementById("clearAll");
+
+        // UTF-8 helpers shared by the binary-to-text encodings.
+        // The decoder is configured as fatal so malformed UTF-8 is rejected
+        // instead of silently replacing invalid bytes.
+        const textEncoder = new TextEncoder();
+        const fatalTextDecoder = new TextDecoder("utf-8", {fatal: true});
+
+        /**
+         * UI metadata for each supported format.
+         *
+         * Besides placeholders and help text, entries can customize button
+         * labels and optionally provide a warning message.
+         */
+        const formatInfo = {
+            "url-component": {
+                inputPlaceholder: "Example: Hello world & café",
+                outputPlaceholder: "Encoded or decoded URL component...",
+                hint: "Uses JavaScript encodeURIComponent()/decodeURIComponent(). Best for individual URL components. Note: the ECMAScript unescaped set is historically based on RFC 2396, so this is not a strict RFC 3986 percent-encoder.",
+                encodeLabel: "Encode",
+                decodeLabel: "Decode"
+            },
+
+            "url": {
+                inputPlaceholder: "Example: https://example.com/search?q=hello world",
+                outputPlaceholder: "Encoded or decoded URL...",
+                hint: "Uses JavaScript encodeURI()/decodeURI() for complete URIs. Reserved URL syntax such as :, /, ?, # and & is preserved. The exact JavaScript algorithm is defined by ECMA-262 rather than RFC 3986.",
+                encodeLabel: "Encode",
+                decodeLabel: "Decode"
+            },
+
+            "query-string": {
+                inputPlaceholder:
+                    "Encode: {\n" +
+                    "  \"q\": \"hello world\",\n" +
+                    "  \"tag\": [\"one\", \"two\"]\n" +
+                    "}\n\n" +
+                    "Decode: q=hello+world&tag=one&tag=two",
+                outputPlaceholder: "Query string or JSON object...",
+                hint: "Encode expects a JSON object and serializes it with URLSearchParams. Arrays become repeated keys. Decode accepts an optional leading ? and preserves repeated keys as arrays.",
+                encodeLabel: "JSON → Query",
+                decodeLabel: "Query → JSON"
+            },
+
+            "base64": {
+                inputPlaceholder: "Enter UTF-8 text or Base64...",
+                outputPlaceholder: "Base64 or decoded UTF-8 text...",
+                hint: "RFC 4648 Base64. Text is converted to UTF-8 bytes before encoding; decoding requires the resulting bytes to be valid UTF-8.",
+                encodeLabel: "Encode",
+                decodeLabel: "Decode"
+            },
+
+            "base64url": {
+                inputPlaceholder: "Enter UTF-8 text or Base64URL...",
+                outputPlaceholder: "Base64URL or decoded UTF-8 text...",
+                hint: "RFC 4648 Base64URL. Encoding uses the URL-safe alphabet and omits trailing = padding. Decoding accepts padded or unpadded input.",
+                encodeLabel: "Encode",
+                decodeLabel: "Decode"
+            },
+
+            "base32": {
+                inputPlaceholder: "Enter UTF-8 text or Base32...",
+                outputPlaceholder: "Base32 or decoded UTF-8 text...",
+                hint: "RFC 4648 Base32 with alphabet A–Z and 2–7. Encoding includes canonical = padding; decoding also accepts input without padding.",
+                encodeLabel: "Encode",
+                decodeLabel: "Decode"
+            },
+
+            "hex": {
+                inputPlaceholder: "Enter UTF-8 text or hexadecimal bytes...",
+                outputPlaceholder: "Hexadecimal bytes or decoded UTF-8 text...",
+                hint: "Base16 representation of the UTF-8 bytes. Encoded bytes are shown as uppercase hexadecimal pairs separated by spaces.",
+                encodeLabel: "Encode",
+                decodeLabel: "Decode"
+            },
+
+            "html": {
+                inputPlaceholder: "Example: <p title=\"A & B\">Hello</p>",
+                outputPlaceholder: "HTML-escaped or decoded text...",
+                hint: "Escapes &, <, >, double quote and apostrophe. Decoding uses the browser's HTML character-reference parser and therefore also recognizes standard named and numeric references.",
+                encodeLabel: "Escape",
+                decodeLabel: "Unescape"
+            },
+
+            "json-string": {
+                inputPlaceholder:
+                    "Encode: text with quotes, newlines, tabs...\n\n" +
+                    "Decode: \"Hello\\nworld\"",
+                outputPlaceholder: "JSON string literal or decoded string value...",
+                hint: "Encode produces a complete JSON string literal including its surrounding quotes. Decode expects a valid JSON string literal, not an arbitrary JSON object or array.",
+                encodeLabel: "Escape",
+                decodeLabel: "Unescape"
+            },
+
+            "unicode": {
+                inputPlaceholder: "Example: Hello 😀 ä",
+                outputPlaceholder: "JavaScript Unicode escapes or decoded text...",
+                hint: "Uses ECMAScript-style Unicode escapes: \\uXXXX for BMP code points and \\u{...} for supplementary code points.",
+                encodeLabel: "Escape",
+                decodeLabel: "Unescape"
+            },
+
+            "jwt": {
+                inputPlaceholder: "Paste a compact JWT (header.payload.signature)...",
+                outputPlaceholder: "Decoded header and payload...",
+                hint: "Decodes the header and payload of a three-part compact JWT for inspection. It does not validate the signature, issuer, audience, expiration or any other security property.",
+                encodeLabel: "",
+                decodeLabel: "Decode JWT",
+                warning: "Decoded JWT contents are untrusted until the token's signature and claims have been validated by the application."
+            },
+
+            "unix-seconds": {
+                inputPlaceholder: "Encode: 2026-09-18T12:00:00Z\n\nDecode: 1789732800",
+                outputPlaceholder: "Unix seconds or ISO date/time...",
+                hint: "Encode converts a date/time to seconds since 1970-01-01T00:00:00Z. Decode converts a numeric timestamp to an ISO 8601 UTC string.",
+                encodeLabel: "Date → Timestamp",
+                decodeLabel: "Timestamp → Date"
+            },
+
+            "unix-milliseconds": {
+                inputPlaceholder: "Encode: 2026-09-18T12:00:00Z\n\nDecode: 1789732800000",
+                outputPlaceholder: "Unix milliseconds or ISO date/time...",
+                hint: "Encode converts a date/time to milliseconds since 1970-01-01T00:00:00Z, matching JavaScript Date time-value units. Decode converts milliseconds to an ISO 8601 UTC string.",
+                encodeLabel: "Date → Timestamp",
+                decodeLabel: "Timestamp → Date"
+            }
+        };
+
+
+        /**
+         * Converts raw bytes to standard Base64.
+         *
+         * The byte array is processed in chunks to avoid exceeding the
+         * argument limit of String.fromCharCode() for large inputs.
+         */
+        function bytesToBase64(bytes) {
+            let binary = "";
+            const chunkSize = 0x8000;
+
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode(
+                    ...bytes.subarray(i, i + chunkSize)
+                );
+            }
+
+            return btoa(binary);
+        }
+
+        /**
+         * Decodes standard Base64 into raw bytes.
+         *
+         * Whitespace is ignored to make pasted multi-line Base64 input usable.
+         */
+        function base64ToBytes(value) {
+            const normalized = value.replace(/\s+/g, "");
+            const binary = atob(normalized);
+            const bytes = new Uint8Array(binary.length);
+
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+
+            return bytes;
+        }
+
+        /**
+         * Encodes UTF-8 text as standard Base64.
+         */
+        function encodeBase64(value) {
+            return bytesToBase64(
+                textEncoder.encode(value)
+            );
+        }
+
+        /**
+         * Decodes standard Base64 and interprets the resulting bytes as UTF-8.
+         */
+        function decodeBase64(value) {
+            return fatalTextDecoder.decode(
+                base64ToBytes(value)
+            );
+        }
+
+        /**
+         * Converts Base64URL input to standard padded Base64.
+         *
+         * Both padded and unpadded Base64URL input are accepted.
+         */
+        function normalizeBase64Url(value) {
+            const compact = value
+                .replace(/\s+/g, "")
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
+
+            const remainder = compact.length % 4;
+
+            // A Base64 string cannot validly have a remainder of one.
+            if (remainder === 1) {
+                throw new Error("Invalid Base64URL length.");
+            }
+
+            return compact + "=".repeat((4 - remainder) % 4);
+        }
+
+        /**
+         * Encodes UTF-8 text using RFC 4648 Base64URL without padding.
+         */
+        function encodeBase64Url(value) {
+            return encodeBase64(value)
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_")
+                .replace(/=+$/g, "");
+        }
+
+        /**
+         * Decodes Base64URL input and interprets the bytes as UTF-8 text.
+         */
+        function decodeBase64Url(value) {
+            return fatalTextDecoder.decode(
+                base64ToBytes(
+                    normalizeBase64Url(value)
+                )
+            );
+        }
+
+        /**
+         * Decodes Base64URL input while preserving the raw bytes.
+         *
+         * This is used for JWT header and payload processing before UTF-8
+         * decoding and JSON parsing.
+         */
+        function decodeBase64UrlBytes(value) {
+            return base64ToBytes(
+                normalizeBase64Url(value)
+            );
+        }
+
+
+        // RFC 4648 Base32 alphabet.
+        const base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+        /**
+         * Encodes UTF-8 text using RFC 4648 Base32.
+         */
+        function encodeBase32(value) {
+            const bytes = textEncoder.encode(value);
+
+            let bits = 0;
+            let bitCount = 0;
+            let result = "";
+
+            for (const byte of bytes) {
+                bits = (bits << 8) | byte;
+                bitCount += 8;
+
+                // Emit one Base32 character for every complete group of five bits.
+                while (bitCount >= 5) {
+                    bitCount -= 5;
+
+                    result += base32Alphabet[
+                        (bits >>> bitCount) & 31
+                    ];
+                }
+
+                // Keep only bits that have not yet been emitted.
+                bits &= (1 << bitCount) - 1;
+            }
+
+            // Encode any remaining partial group.
+            if (bitCount > 0) {
+                result += base32Alphabet[
+                    (bits << (5 - bitCount)) & 31
+                ];
+            }
+
+            // Canonical Base32 output is padded to a multiple of eight characters.
+            while (result.length % 8 !== 0) {
+                result += "=";
+            }
+
+            return result;
+        }
+
+        /**
+         * Decodes RFC 4648 Base32 into UTF-8 text.
+         *
+         * Input may be padded or unpadded, but invalid characters and
+         * non-zero trailing padding bits are rejected.
+         */
+        function decodeBase32(value) {
+            const normalized = value
+                .toUpperCase()
+                .replace(/\s+/g, "");
+
+            const firstPadding = normalized.indexOf("=");
+
+            const data =
+                firstPadding >= 0
+                    ? normalized.slice(0, firstPadding)
+                    : normalized;
+
+            const padding =
+                firstPadding >= 0
+                    ? normalized.slice(firstPadding)
+                    : "";
+
+            if (padding && !/^=+$/.test(padding)) {
+                throw new Error("Invalid Base32 padding.");
+            }
+
+            let bits = 0;
+            let bitCount = 0;
+
+            const bytes = [];
+
+            for (const character of data) {
+                const index = base32Alphabet.indexOf(character);
+
+                if (index < 0) {
+                    throw new Error(
+                        `Invalid Base32 character: ${character}`
+                    );
+                }
+
+                bits = (bits << 5) | index;
+                bitCount += 5;
+
+                if (bitCount >= 8) {
+                    bitCount -= 8;
+
+                    bytes.push(
+                        (bits >>> bitCount) & 0xff
+                    );
+                }
+
+                bits &= (1 << bitCount) - 1;
+            }
+
+            // Any unused trailing bits must be zero in a valid encoding.
+            if (bitCount > 0 && bits !== 0) {
+                throw new Error(
+                    "Invalid non-zero Base32 padding bits."
+                );
+            }
+
+            return fatalTextDecoder.decode(
+                new Uint8Array(bytes)
+            );
+        }
+
+        /**
+         * Encodes UTF-8 bytes as uppercase hexadecimal pairs.
+         */
+        function encodeHex(value) {
+            return Array.from(
+                textEncoder.encode(value),
+                byte => byte
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(2, "0")
+            ).join(" ");
+        }
+
+        /**
+         * Decodes hexadecimal byte input as UTF-8 text.
+         *
+         * Common separators and optional 0x prefixes are accepted.
+         */
+        function decodeHex(value) {
+            const normalized = value
+                .replace(/0x/gi, "")
+                .replace(/[\s,:;_-]+/g, "");
+
+            if (!/^[0-9a-fA-F]*$/.test(normalized)) {
+                throw new Error(
+                    "Hex input contains invalid characters."
+                );
+            }
+
+            if (normalized.length % 2 !== 0) {
+                throw new Error(
+                    "Hex input must contain complete bytes (two hex digits per byte)."
+                );
+            }
+
+            const bytes = new Uint8Array(
+                normalized.length / 2
+            );
+
+            for (let i = 0; i < normalized.length; i += 2) {
+                bytes[i / 2] = Number.parseInt(
+                    normalized.slice(i, i + 2),
+                    16
+                );
+            }
+
+            return fatalTextDecoder.decode(bytes);
+        }
+
+        /**
+         * Escapes the HTML-sensitive characters used by this tool.
+         */
+        function encodeHtml(value) {
+            return value.replace(/[&<>"']/g, character => {
+                switch (character) {
+                    case "&":
+                        return "&amp;";
+
+                    case "<":
+                        return "&lt;";
+
+                    case ">":
+                        return "&gt;";
+
+                    case '"':
+                        return "&quot;";
+
+                    case "'":
+                        return "&#39;";
+
+                    default:
+                        return character;
+                }
+            });
+        }
+
+        /**
+         * Decodes HTML character references using the browser's HTML parser.
+         */
+        function decodeHtml(value) {
+            const element = document.createElement("textarea");
+
+            element.innerHTML = value;
+
+            return element.value;
+        }
+
+        /**
+         * Converts every Unicode code point to an ECMAScript-style escape.
+         *
+         * BMP characters use \uXXXX, while supplementary code points use
+         * the \u{...} notation.
+         */
+        function encodeUnicode(value) {
+            return Array.from(value, character => {
+                const codePoint = character.codePointAt(0);
+
+                return codePoint <= 0xffff
+                    ? "\\u" +
+                    codePoint
+                        .toString(16)
+                        .toUpperCase()
+                        .padStart(4, "0")
+                    : "\\u{" +
+                    codePoint
+                        .toString(16)
+                        .toUpperCase() +
+                    "}";
+            }).join("");
+        }
+
+        /**
+         * Decodes ECMAScript-style Unicode escapes.
+         */
+        function decodeUnicode(value) {
+            return value
+                .replace(
+                    /\\u\{([0-9a-fA-F]{1,6})\}/g,
+                    (_, hex) => {
+                        const codePoint = Number.parseInt(hex, 16);
+
+                        if (codePoint > 0x10ffff) {
+                            throw new Error(
+                                `Invalid Unicode code point: U+${hex.toUpperCase()}`
+                            );
+                        }
+
+                        return String.fromCodePoint(codePoint);
+                    }
+                )
+                .replace(
+                    /\\u([0-9a-fA-F]{4})/g,
+                    (_, hex) =>
+                        String.fromCharCode(
+                            Number.parseInt(hex, 16)
+                        )
+                );
+        }
+
+        /**
+         * Encodes text as a complete JSON string literal.
+         */
+        function encodeJsonString(value) {
+            return JSON.stringify(value);
+        }
+
+        /**
+         * Decodes a JSON string literal.
+         *
+         * Objects, arrays, numbers and other JSON value types are rejected.
+         */
+        function decodeJsonString(value) {
+            const parsed = JSON.parse(value);
+
+            if (typeof parsed !== "string") {
+                throw new Error(
+                    "Input must be a JSON string literal, for example: \"Hello\\nworld\"."
+                );
+            }
+
+            return parsed;
+        }
+
+        /**
+         * Converts a JSON object into an application/x-www-form-urlencoded
+         * style query string using URLSearchParams.
+         *
+         * Array values are emitted as repeated parameters.
+         */
+        function encodeQueryString(value) {
+            const parsed = JSON.parse(value);
+
+            if (
+                !parsed ||
+                Array.isArray(parsed) ||
+                typeof parsed !== "object"
+            ) {
+                throw new Error(
+                    "Query-string encoding expects a JSON object."
+                );
+            }
+
+            const params = new URLSearchParams();
+
+            for (const [key, rawValue] of Object.entries(parsed)) {
+                const values =
+                    Array.isArray(rawValue)
+                        ? rawValue
+                        : [rawValue];
+
+                for (const item of values) {
+                    // Undefined values are omitted entirely.
+                    if (item === undefined) {
+                        continue;
+                    }
+
+                    if (
+                        item !== null &&
+                        typeof item === "object"
+                    ) {
+                        throw new Error(
+                            `Query parameter '${key}' must contain primitive values, null, or an array of those values.`
+                        );
+                    }
+
+                    params.append(
+                        key,
+                        item === null
+                            ? ""
+                            : String(item)
+                    );
+                }
+            }
+
+            return params.toString();
+        }
+
+        /**
+         * Converts a query string into a JSON object.
+         *
+         * Repeated parameter names are represented as arrays.
+         */
+        function decodeQueryString(value) {
+            const source = value
+                .trim()
+                .replace(/^\?/, "");
+
+            const params = new URLSearchParams(source);
+            const result = Object.create(null);
+
+            for (const [key, item] of params) {
+                if (!(key in result)) {
+                    result[key] = item;
+                } else if (Array.isArray(result[key])) {
+                    result[key].push(item);
+                } else {
+                    result[key] = [
+                        result[key],
+                        item
+                    ];
+                }
+            }
+
+            return JSON.stringify(
+                result,
+                null,
+                2
+            );
+        }
+
+        /**
+         * Decodes UTF-8 bytes and parses the resulting text as JSON.
+         *
+         * A descriptive error is produced for invalid JWT JSON sections.
+         */
+        function bytesToUtf8Json(bytes, label) {
+            const text = fatalTextDecoder.decode(bytes);
+
+            try {
+                return JSON.parse(text);
+            } catch {
+                throw new Error(
+                    `${label} is not valid JSON.`
+                );
+            }
+        }
+
+        /**
+         * Decodes the header and payload of a compact three-part JWT/JWS.
+         *
+         * This is inspection only. No signature or claim validation is
+         * performed, and the result is explicitly marked as unverified.
+         */
+        function decodeJwt(value) {
+            const token = value.trim();
+            const parts = token.split(".");
+
+            if (parts.length !== 3) {
+                // Five segments usually indicate compact JWE rather than JWS.
+                if (parts.length === 5) {
+                    throw new Error(
+                        "This looks like compact JWE (5 parts). Its encrypted payload cannot be decoded without the decryption key."
+                    );
+                }
+
+                throw new Error(
+                    "A compact signed JWT/JWS must contain exactly three dot-separated parts."
+                );
+            }
+
+            const header = bytesToUtf8Json(
+                decodeBase64UrlBytes(parts[0]),
+                "JWT header"
+            );
+
+            const payload = bytesToUtf8Json(
+                decodeBase64UrlBytes(parts[1]),
+                "JWT payload"
+            );
+
+            return JSON.stringify(
+                {
+                    header,
+                    payload,
+                    signature: parts[2],
+                    verified: false
+                },
+                null,
+                2
+            );
+        }
+
+        /**
+         * Parses a date/time string and returns Unix milliseconds.
+         */
+        function parseDate(value) {
+            const milliseconds = Date.parse(
+                value.trim()
+            );
+
+            if (!Number.isFinite(milliseconds)) {
+                throw new Error(
+                    "Invalid date/time. Prefer an RFC 3339 / ISO 8601 value with an explicit timezone, for example 2026-09-18T12:00:00Z."
+                );
+            }
+
+            return milliseconds;
+        }
+
+        /**
+         * Parses a numeric timestamp.
+         */
+        function parseTimestamp(value) {
+            const timestamp = Number(
+                value.trim()
+            );
+
+            if (!Number.isFinite(timestamp)) {
+                throw new Error(
+                    "Timestamp must be a finite number."
+                );
+            }
+
+            return timestamp;
+        }
+
+        /**
+         * Converts Unix milliseconds into an ISO 8601 UTC string.
+         */
+        function timestampToIso(milliseconds) {
+            const date = new Date(milliseconds);
+
+            if (!Number.isFinite(date.getTime())) {
+                throw new Error(
+                    "Timestamp is outside the range supported by JavaScript Date."
+                );
+            }
+
+            return date.toISOString();
+        }
+
+        /**
+         * Encodes the input according to the currently selected format.
+         */
+        function encodeValue(value) {
+            switch (format.value) {
+                case "url-component":
+                    return encodeURIComponent(value);
+
+                case "url":
+                    return encodeURI(value);
+
+                case "query-string":
+                    return encodeQueryString(value);
+
+                case "base64":
+                    return encodeBase64(value);
+
+                case "base64url":
+                    return encodeBase64Url(value);
+
+                case "base32":
+                    return encodeBase32(value);
+
+                case "hex":
+                    return encodeHex(value);
+
+                case "html":
+                    return encodeHtml(value);
+
+                case "json-string":
+                    return encodeJsonString(value);
+
+                case "unicode":
+                    return encodeUnicode(value);
+
+                case "unix-seconds":
+                    return String(
+                        Math.trunc(
+                            parseDate(value) / 1000
+                        )
+                    );
+
+                case "unix-milliseconds":
+                    return String(
+                        parseDate(value)
+                    );
+
+                case "jwt":
+                    throw new Error(
+                        "JWT creation is intentionally not provided by this inspection tool."
+                    );
+
+                default:
+                    throw new Error("Unknown format.");
+            }
+        }
+
+        /**
+         * Decodes or converts the input according to the selected format.
+         */
+        function decodeValue(value) {
+            switch (format.value) {
+                case "url-component":
+                    return decodeURIComponent(value);
+
+                case "url":
+                    return decodeURI(value);
+
+                case "query-string":
+                    return decodeQueryString(value);
+
+                case "base64":
+                    return decodeBase64(value);
+
+                case "base64url":
+                    return decodeBase64Url(value);
+
+                case "base32":
+                    return decodeBase32(value);
+
+                case "hex":
+                    return decodeHex(value);
+
+                case "html":
+                    return decodeHtml(value);
+
+                case "json-string":
+                    return decodeJsonString(value);
+
+                case "unicode":
+                    return decodeUnicode(value);
+
+                case "jwt":
+                    return decodeJwt(value);
+
+                case "unix-seconds":
+                    return timestampToIso(
+                        parseTimestamp(value) * 1000
+                    );
+
+                case "unix-milliseconds":
+                    return timestampToIso(
+                        parseTimestamp(value)
+                    );
+
+                default:
+                    throw new Error("Unknown format.");
+            }
+        }
+
+        /**
+         * Executes an encode/decode operation and handles errors consistently.
+         */
+        function run(operation) {
+            clearStatus();
+
+            try {
+                output.value = operation(
+                    input.value
+                );
+            } catch (error) {
+                output.value = "";
+
+                showError(
+                    error instanceof Error
+                        ? error.message
+                        : "Unable to process the input."
+                );
+            }
+        }
+
+        /**
+         * Displays a normal status message.
+         */
+        function showStatus(message) {
+            status.textContent = message;
+            status.classList.remove("error");
+        }
+
+        /**
+         * Displays an error message.
+         */
+        function showError(message) {
+            status.textContent = message;
+            status.classList.add("error");
+        }
+
+        /**
+         * Clears any status or error message.
+         */
+        function clearStatus() {
+            status.textContent = "";
+            status.classList.remove("error");
+        }
+
+        /**
+         * Copies the current output to the clipboard.
+         *
+         * The Clipboard API is preferred, with execCommand("copy") retained
+         * as a fallback for older or restricted browser contexts.
+         */
+        async function copyOutput() {
+            if (!output.value) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(
+                    output.value
+                );
+
+                showStatus(
+                    "Copied to clipboard."
+                );
+            } catch {
+                output.focus();
+                output.select();
+
+                if (document.execCommand("copy")) {
+                    showStatus(
+                        "Copied to clipboard."
+                    );
+                } else {
+                    showError(
+                        "Clipboard access is not available in this browser context."
+                    );
+                }
+            }
+        }
+
+        /**
+         * Exchanges the input and output values.
+         */
+        function swap() {
+            const value = input.value;
+
+            input.value = output.value;
+            output.value = value;
+
+            clearStatus();
+        }
+
+        /**
+         * Updates placeholders, button labels, hints and warnings when
+         * the selected format changes.
+         */
+        function updateUi() {
+            const info = formatInfo[format.value];
+
+            input.placeholder = info.inputPlaceholder;
+            output.placeholder = info.outputPlaceholder;
+
+            hint.textContent = info.hint;
+
+            encodeButton.textContent =
+                info.encodeLabel || "Encode";
+
+            decodeButton.textContent =
+                info.decodeLabel || "Decode";
+
+            // JWT is intentionally decode-only.
+            encodeButton.hidden =
+                format.value === "jwt";
+
+            warning.hidden =
+                !info.warning;
+
+            warning.textContent =
+                info.warning || "";
+
+            inputTitle.textContent =
+                format.value === "query-string"
+                    ? "Input (text or JSON)"
+                    : "Input";
+
+            outputTitle.textContent =
+                format.value === "jwt"
+                    ? "Decoded (unverified)"
+                    : "Output";
+
+            // Switching formats invalidates any previous result.
+            clearStatus();
+            output.value = "";
+        }
+
+
+        // Main encode/decode actions.
+        encodeButton.addEventListener(
+            "click",
+            () => run(encodeValue)
+        );
+
+        decodeButton.addEventListener(
+            "click",
+            () => run(decodeValue)
+        );
+
+        swapButton.addEventListener(
+            "click",
+            swap
+        );
+
+        copyOutputButton.addEventListener(
+            "click",
+            copyOutput
+        );
+
+        // Clear only the input field.
+        clearInputButton.addEventListener("click", () => {
+            input.value = "";
+
+            clearStatus();
+            input.focus();
+        });
+
+        // Clear both editor fields.
+        clearAllButton.addEventListener("click", () => {
+            input.value = "";
+            output.value = "";
+
+            clearStatus();
+            input.focus();
+        });
+
+        // Reconfigure the UI whenever the selected format changes.
+        format.addEventListener(
+            "change",
+            updateUi
+        );
+
+        // Ctrl+Enter (Windows/Linux) or Cmd+Enter (macOS) performs the
+        // default action. JWT uses Decode because encoding is disabled.
+        input.addEventListener("keydown", event => {
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key === "Enter"
+            ) {
+                event.preventDefault();
+
+                run(
+                    format.value === "jwt"
+                        ? decodeValue
+                        : encodeValue
+                );
+            }
+        });
+
+        // Initialize placeholders, labels, hints and button visibility.
+        updateUi();
+    </script>
+</body>
+
+</html>
